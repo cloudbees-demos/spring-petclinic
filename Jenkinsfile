@@ -3,7 +3,7 @@
 pipeline {
     agent {
         kubernetes {
-          yaml: '''
+            yaml '''
                 apiVersion: v1
                 kind: Pod
                 spec:
@@ -59,7 +59,8 @@ pipeline {
         */
         stage('build-test-deployArtifacts') {
             /* groovylint-disable-next-line GStringExpressionWithinString */
-            sh '''
+            steps {
+                sh '''
             cat << EOF > ~/.m2/settings.xml
             <!-- servers
               | This is a list of authentication profiles, keyed by the server-id used within the system.
@@ -95,6 +96,7 @@ pipeline {
             ./mvn2 deploy
 
             '''
+            }
         }
         // junit '**/target/surefire-reports/TEST-*.xml'
 
@@ -106,7 +108,9 @@ pipeline {
          *
         */
         stage('deploy2ecr') {
-            sh 'aws sts get-caller-identity --query Account --output text'
+            steps {
+                sh 'aws sts get-caller-identity --query Account --output text'
+            }
         }
         /*
          *

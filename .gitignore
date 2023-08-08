@@ -21,3 +21,4 @@ token*
 cert*
 cacerts
 .DS*
+.groovylintrc.json
