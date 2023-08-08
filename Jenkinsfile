@@ -30,7 +30,7 @@ pipeline {
         AWS_CRED = credentials('clusterAdmin')
     }
     tools {
-        jdk ' Java-17'
+        jdk 'Java-17'
     }
     stages {
         /*
