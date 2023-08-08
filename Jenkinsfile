@@ -1,70 +1,113 @@
+// Uses Declarative syntax to run commands inside a container.
 pipeline {
-  options{
-    buildDiscarder(logRotator(numToKeepStr: '5'))
-  }
-  agent {
+    agent {
         kubernetes {
-            yaml '''
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: maven
-    image: 
-    command:
-    - sleep
-    args:
-    - infinity
-    securityContext:
-          allowPrivilegeEscalation: false
-          runAsUser: 0
-'''
-            defaultContainer 'maven'
+          yaml: '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: maven
+                    image: maven:3.6.3-jdk-8
+                    command:
+                    - sleep
+                    args:
+                    - infinity
+                  - name: docker
+                    image: docker:latest
+                    command:
+                    - sleep
+                    args:
+                    - infinity
+                '''
+                            
+                            
+          defaultContainer 'maven'
         }
     }
-    environment {
-        HOME=
-        PATH=
-    }
-    tools{
-      jdk 'openjdk-17'
-    }
-    stages {
+      stages{
         /*
-
          *
-         * Unit Test and Code Scan
-         * Only executes on main and release branch builds. 
+         * STAGE - Code Coverage Scan
          *
-        
+         * Scan Code for:
+         * New features, any TODOs, etc.
         */
-        // TODO xUnit viz in Jenkins
-        stage('Unit Test') {
-            steps {
-              sh 'dotnet --version; ls -l /usr/bin/dotnet; which dotnet'
-              //sh 'chmod 775 $SONAR_SCANNER_MSBUILD_HOME/**/bin/*'
-              //sh 'chmod 775 $SONAR_SCANNER_MSBUILD_HOME/**/lib/*.jar'
-              sh 'chmod 775 /root/.dotnet/tools/.store/dotnet-sonarscanner/5.8.0/dotnet-sonarscanner/5.8.0/tools/net5.0/any/sonar-scanner-4.7.0.2747/bin/sonar-scanner'
-              sh 'chmod 775 /root/.dotnet/tools/.store/dotnet-sonarscanner/5.8.0/dotnet-sonarscanner/5.8.0/tools/net5.0/any/sonar-scanner-4.7.0.2747/lib/sonar-scanner-cli-4.7.0.2747.jar'
-              sh 'dotnet restore ./unit-testing-using-dotnet-test/PrimeService.Tests/'
-              sh 'dotnet test ./unit-testing-using-dotnet-test/PrimeService.Tests/ --logger:"xunit;LogFilePath=/var/log/test_result.xml"'
-              sh 'cat /var/log/test_result.xml'
-            }
-        }
-
-        // TODO Add keys  
         stage('Code Coverage Scan') {
-        
             steps {
-              withSonarQubeEnv(installationName:'sqA'){
-              sh 'dotnet tool install --global dotnet-sonarscanner'
-              sh 'dotnet sonarscanner begin /k:"ameris-bank" /d:sonar.host.url="https://sonar.newyorklifepoc.cb-demos.io"  /d:sonar.login="06fafcc8334a4128908c456afe18dbcb86eb75d3"'
-              sh 'dotnet build ./unit-testing-using-dotnet-test/PrimeService'
-              sh 'dotnet sonarscanner end /d:sonar.login="06fafcc8334a4128908c456afe18dbcb86eb75d3"'
-              //sh "dotnet build ./unit-testing-using-dotnet-test/PrimeService/ sonar:sonar"
+              withSonarQubeEnv(installationName:'Sonarqube_Thunder'){
+                sh '''
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=cbc-petclinic-eks \
+                      -Dsonar.host.url=https://sonarqube.cb-demos.io \
+                      -Dsonar.login=50ced74e354bec4c6c9adb009f0ef4e2a158ea1b
+                   '''
               }
             }
-        } 
+        }
+
+        /*
+         *
+         * STAGE - build-test-deployArtifacts
+         *
+         * Deploy to Nexus repo: 'maven-releases'
+         * 
+        */
+        stage('build-test-deployArtifacts'){
+            sh '''
+                        
+            cat << EOF > ~/.m2/settings.xml
+            <!-- servers
+              | This is a list of authentication profiles, keyed by the server-id used within the system.
+              | Authentication profiles can be used whenever maven must make a connection to a remote server.
+              |-->
+            <servers>
+              <!-- server
+                | Specifies the authentication information to use when connecting to a particular server, identified by
+                | a unique name within the system (referred to by the 'id' attribute below).
+                |
+                | NOTE: You should either specify username/password OR privateKey/passphrase, since these pairings are
+                |       used together.
+                |
+                -->
+              <server>
+                <id>nexus</id>
+                <username>${env.NEXUS_USER}</username>
+                <password>${env.NEXUS_PASS}</password>
+              </server>
+              
+                
+                <!-- Another sample, using keys to authenticate.
+              <server>
+                  <id>siteServer</id>
+                  <privateKey>/path/to/private/key</privateKey>
+                  <passphrase>optional; leave empty if not used.</passphrase>
+              </server>
+                -->
+            </servers>
+            EOF 
+            
+            ##### ---------------   BUILD      >--------------- #####
+            ##### --------------->    TEST     >--------------- #####
+            ##### --------------->     DEPLOY  |--------------- #####
+            ./mvn2 deploy
+            
+            
+            '''
+        }
+        // junit '**/target/surefire-reports/TEST-*.xml'
+
+
+        /*
+         *
+         * STAGE - Deploy Container Image to ECR
+         *
+         * Deploy to ECR
+         * 
+        */
+        stage('deploy2ecr'){
+          sh 'aws sts get-caller-identity --query Account --output text'
+        }
         /*
          *
          * STAGE - Deploy to Staging
@@ -80,39 +123,7 @@ spec:
 
         }
         */
-        /* 
-        stage('Deploy to Staging - example 1') {
-          when { anyOf { branch releaseBranch; branch mainBranch } }
-          agent {
-            kubernetes {
-                    yaml '''
-                    apiVersion: v1
-                    kind: Pod
-                    spec:
-                      containers:
-                      - name: helm
-                        image: alpine/helm
-                        env:
-                          DOTNET_CLI_HOME: '/tmp'
-                        command:
-                        - sleep
-                        args:
-                        - infinity
-                    '''
-                      defaultContainer 'helm'
-                  }
-              }
-
-            steps {
-              sh 'export HOME="`pwd`'
-              sh 'kubectl config set-cluster development --server=$k8sCluster --insecure-skip-tls-verify'
-              sh 'kubectl config set-credentials jenkins --token=$clusterAuthToken'
-              sh 'kubectl config set-context helm --cluster=development --namespace=$namespace --user=jenkins'
-              sh 'kubectl config use-context helm'
-
-              sh 'helm upgrade --install --wait --namespace $namespace --set ingress.host=$ingressHost'
-              
-            }
-        } */
-      }
+    }
 }
+
+

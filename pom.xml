@@ -314,24 +314,24 @@
   </licenses>
 
   <repositories>
-    <repository>
-      <id>nexus Releases</id>
+    <!--repository>
+      <id>nexus</id>
       <name>Releases Milestones</name>
-      <url>https://nexus.preview.cb-demos.io/repository/maven-releases</url>
+      <url>https://nexus.preview.cb-demos.io/repository/petclinic</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
     </repository>
     <repository>
-      <id>nexus Snapshots</id>
+      <id>nexus</id>
       <name>Spring Snapshots</name>
       <url>https://nexus.preview.cb-demos.io/repository/maven-snapshots</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
-    </repository>
+    </repository -->
     <repository>
-      <id>nexus Milestones</id>
+      <id>nexus</id>
       <name>Spring Milestones</name>
       <url>https://nexus.preview.cb-demos.io/repository/maven-releases</url>
       <snapshots>
@@ -485,7 +485,7 @@
       <url>https://nexus.preview.cb-demos.io/repository/maven-releases</url>
     </repository>
     <snapshotRepository>
-      <id>nexus</id>
+      <id>nexus-snap</id>
       <name>Snapshot</name>
       <url>https://nexus.preview.cb-demos.io/repository/maven-snapshots</url>
     </snapshotRepository>
