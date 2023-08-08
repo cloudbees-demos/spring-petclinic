@@ -1,4 +1,5 @@
 // Uses Declarative syntax to run commands inside a container.
+/* groovylint-disable-next-line CompileStatic */
 pipeline {
     agent {
         kubernetes {
@@ -20,12 +21,15 @@ pipeline {
                     args:
                     - infinity
                 '''
-                            
-                            
-          defaultContainer 'maven'
+
+            defaultContainer 'maven'
         }
     }
-      stages{
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'
+        AWS_CRED = credentials('clusterAdmin')
+    }
+    stages {
         /*
          *
          * STAGE - Code Coverage Scan
@@ -35,14 +39,14 @@ pipeline {
         */
         stage('Code Coverage Scan') {
             steps {
-              withSonarQubeEnv(installationName:'Sonarqube_Thunder'){
-                sh '''
+                withSonarQubeEnv(installationName:'Sonarqube_Thunder') {
+                    sh '''
                     mvn sonar:sonar \
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
                       -Dsonar.login=50ced74e354bec4c6c9adb009f0ef4e2a158ea1b
                    '''
-              }
+                }
             }
         }
 
@@ -51,11 +55,11 @@ pipeline {
          * STAGE - build-test-deployArtifacts
          *
          * Deploy to Nexus repo: 'maven-releases'
-         * 
+         *
         */
-        stage('build-test-deployArtifacts'){
+        stage('build-test-deployArtifacts') {
+            /* groovylint-disable-next-line GStringExpressionWithinString */
             sh '''
-                        
             cat << EOF > ~/.m2/settings.xml
             <!-- servers
               | This is a list of authentication profiles, keyed by the server-id used within the system.
@@ -75,8 +79,6 @@ pipeline {
                 <username>${env.NEXUS_USER}</username>
                 <password>${env.NEXUS_PASS}</password>
               </server>
-              
-                
                 <!-- Another sample, using keys to authenticate.
               <server>
                   <id>siteServer</id>
@@ -85,28 +87,26 @@ pipeline {
               </server>
                 -->
             </servers>
-            EOF 
-            
+            EOF
+
             ##### ---------------   BUILD      >--------------- #####
             ##### --------------->    TEST     >--------------- #####
             ##### --------------->     DEPLOY  |--------------- #####
             ./mvn2 deploy
-            
-            
+
             '''
         }
         // junit '**/target/surefire-reports/TEST-*.xml'
-
 
         /*
          *
          * STAGE - Deploy Container Image to ECR
          *
          * Deploy to ECR
-         * 
+         *
         */
-        stage('deploy2ecr'){
-          sh 'aws sts get-caller-identity --query Account --output text'
+        stage('deploy2ecr') {
+            sh 'aws sts get-caller-identity --query Account --output text'
         }
         /*
          *
@@ -115,7 +115,7 @@ pipeline {
          * Only executes on main and release branch builds. Deploys to either 'Dev'
          * or 'QA' environment, based on whether main or release branch is being
          * built.
-        
+
         stage('Deploy to Staging') {
           steps {
             sh 'helm'
@@ -125,5 +125,3 @@ pipeline {
         */
     }
 }
-
-
