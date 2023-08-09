@@ -20,6 +20,12 @@ pipeline {
                     - sleep
                     args:
                     - infinity
+                  - name: aws
+                    image: amazon/aws-cli
+                    command:
+                    - sleep
+                    args:
+                    - infinity
                 '''
 
             defaultContainer 'maven'
@@ -49,7 +55,7 @@ pipeline {
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
                       -Dsonar.login=$SONAR_TOKEN
-                      -Dsonar.sources=src/main/java/
+                      -Dsonar.sources=./src/main/java/
                       -Dsonar.java.binaries=./target/classes/org/springframework/
                    '''
                 }
@@ -115,7 +121,9 @@ pipeline {
         */
         stage('deploy2ecr') {
             steps {
-                sh 'aws sts get-caller-identity --query Account --output text'
+                container('docker') {
+                    sh 'aws sts get-caller-identity --query Account --output text'
+                }
             }
         }
         /*
