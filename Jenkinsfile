@@ -28,13 +28,14 @@ pipeline {
                     - infinity
                 '''
 
-            defaultContainer 'maven'
+            defaultContainer 'awscli'
         }
     }
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
         AWS_CRED = credentials('clusterAdmin')
-
+        AWD_ID = $(aws sts get-caller-identity --query Account --output text)
+        REGISTRY = "$AWD_ID.dkr.ecr.us-east-1.amazonaws.com"
     }
     tools {
         jdk 'Java-17'
@@ -61,7 +62,7 @@ pipeline {
                       -Dsonar.sources=./src/main/java/org/springframework/ \
                       -Dsonar.java.binaries=./target/
                     '''
-                    stash name: 'SpringJar', includes: '/target/*.jar'
+                    stash name: 'SpringJar', includes: './target/spring-petclinic-3.1.0.jar'
                 }
             }
         }
@@ -125,7 +126,10 @@ pipeline {
         stage('buildDockerImage') {
             steps {
                 container('docker') {
-                    sh 'aws sts get-caller-identity --query Account --output text'
+                    sh '''
+                    docker tag springboot-petclinic:latest $REGISTRY/springboot-petclinic:latest 
+                    docker push $REGISTRY/springboot-petclinic:latest
+                    '''
                 }
             }
         }
