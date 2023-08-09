@@ -75,9 +75,9 @@ pipeline {
         stage('Get AWS Variables') {
             steps {
                 sh '''
-                  export AWD_ID = $(aws sts get-caller-identity --query Account --output text)
-                  export REGISTRY = "$AWD_ID.dkr.ecr.us-east-1.amazonaws.com"
-                  export AWD_PASS = aws ecr get-login-password --region us-east-1
+                  export AWS_ID=$(aws sts get-caller-identity --query Account --output text)
+                  export REGISTRY="$AWS_ID.dkr.ecr.us-east-1.amazonaws.com"
+                  export AWS_PASS=$(aws ecr get-login-password --region us-east-1)
                   '''
             }
         }
