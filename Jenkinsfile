@@ -28,6 +28,7 @@ pipeline {
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
         AWS_CRED = credentials('clusterAdmin')
+
     }
     tools {
         jdk 'Java-17'
@@ -44,10 +45,10 @@ pipeline {
             steps {
                 withSonarQubeEnv(installationName:'Sonarqube_Thunder') {
                     sh '''
-                    mvn sonar:sonar \
+                    mvn clean package sonar:sonar \
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
-                      -Dsonar.login=50ced74e354bec4c6c9adb009f0ef4e2a158ea1b
+                      -Dsonar.login=$SONAR_TOKEN
                    '''
                 }
             }
