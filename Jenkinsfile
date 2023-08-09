@@ -1,3 +1,4 @@
+/* groovylint-disable DuplicateStringLiteral */
 // Uses Declarative syntax to run commands inside a container.
 /* groovylint-disable-next-line CompileStatic */
 pipeline {
@@ -48,8 +49,9 @@ pipeline {
         */
         stage('Code Coverage Scan') {
             steps {
-                withSonarQubeEnv(installationName:'Sonarqube_Thunder') {
-                    sh '''
+                container('maven'){
+                    withSonarQubeEnv(installationName:'Sonarqube_Thunder') {
+                        sh '''
                     mvn clean package sonar:sonar \
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
@@ -60,11 +62,11 @@ pipeline {
                     ls ./target/spring-petclinic-3.1.0.jar
                     ls ./target
                     '''
-                    stash includes: 'target/spring-petclinic-3.1.0.jar', name: 'SpringJar'
+                        stash includes: 'target/spring-petclinic-3.1.0.jar', name: 'SpringJar'
+                    }
                 }
             }
         }
-
         /*
          *
          * STAGE - Get AWS Variables
@@ -74,11 +76,13 @@ pipeline {
         */
         stage('Get AWS Variables') {
             steps {
-                sh '''
+                container('awscli'){
+                    sh '''
                   export AWS_ID=$(aws sts get-caller-identity --query Account --output text)
                   export REGISTRY="$AWS_ID.dkr.ecr.us-east-1.amazonaws.com"
                   export AWS_PASS=$(aws ecr get-login-password --region us-east-1)
                   '''
+                }
             }
         }
         /*
@@ -91,7 +95,8 @@ pipeline {
         stage('build-test-deployArtifacts') {
             /* groovylint-disable-next-line GStringExpressionWithinString */
             steps {
-                sh '''
+                container('maven') {
+                    sh '''
             cat << EOF > ~/.m2/settings.xml
             <!-- servers
               | This is a list of authentication profiles, keyed by the server-id used within the system.
@@ -127,6 +132,7 @@ pipeline {
             ./mvnw deploy
 
             '''
+                }
             }
         }
         // junit '**/target/surefire-reports/TEST-*.xml'
