@@ -49,6 +49,8 @@ pipeline {
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
                       -Dsonar.login=$SONAR_TOKEN
+                      -Dsonar.sources=src/main/java/
+                      -Dsonar.java.binaries=./target/classes/org/springframework/
                    '''
                 }
             }
