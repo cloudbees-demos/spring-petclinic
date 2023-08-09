@@ -78,10 +78,10 @@ pipeline {
             steps {
                 container('awscli'){
                     sh '''
-                  export AWS_ID=$(aws sts get-caller-identity --query Account --output text)
-                  export REGISTRY="$AWS_ID.dkr.ecr.us-east-1.amazonaws.com"
-                  export AWS_PASS=$(aws ecr get-login-password --region us-east-1)
-                  '''
+                      export AWS_ID=$(aws sts get-caller-identity --query Account --output text)
+                      export REGISTRY="$AWS_ID.dkr.ecr.us-east-1.amazonaws.com"
+                      export AWS_PASS=$(aws ecr get-login-password --region us-east-1)
+                      '''
                 }
             }
         }
@@ -97,7 +97,9 @@ pipeline {
             steps {
                 container('maven') {
                     sh '''
-            cat << EOF > ~/.m2/settings.xml
+
+            ls ./.m2/
+            cat >> ~/.m2/settings.xml << EOF
             <!-- servers
               | This is a list of authentication profiles, keyed by the server-id used within the system.
               | Authentication profiles can be used whenever maven must make a connection to a remote server.
