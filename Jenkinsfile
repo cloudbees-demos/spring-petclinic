@@ -50,8 +50,6 @@ pipeline {
             steps {
                 withSonarQubeEnv(installationName:'Sonarqube_Thunder') {
                     sh '''
-                    ls ./
-                    ls ./src/main/java/org/
                     mvn clean package sonar:sonar \
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
@@ -59,6 +57,8 @@ pipeline {
                       -Dsonar.language=java \
                       -Dsonar.sources=./src/main/java/org/springframework/ \
                       -Dsonar.java.binaries=./target/
+                    ls ./target/spring-petclinic-3.1.0.jar
+                    ls ./target
                     '''
                     stash name: 'SpringJar', includes: './target/spring-petclinic-3.1.0.jar'
                 }
