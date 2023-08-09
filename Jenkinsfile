@@ -52,7 +52,7 @@ pipeline {
                 withSonarQubeEnv(installationName:'Sonarqube_Thunder') {
                     sh '''
                     ls ./
-                    ls /var/lib/jenkins/workspace/$JOB_NAME/
+                    ls ./main/
                     mvn clean package sonar:sonar \
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
