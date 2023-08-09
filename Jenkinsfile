@@ -28,7 +28,7 @@ pipeline {
                     - infinity
                 '''
 
-            defaultContainer 'awscli'
+            defaultContainer 'maven'
         }
     }
     environment {
