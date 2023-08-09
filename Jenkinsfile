@@ -60,7 +60,7 @@ pipeline {
                     ls ./target/spring-petclinic-3.1.0.jar
                     ls ./target
                     '''
-                    stash name: 'SpringJar', includes: './target/spring-petclinic-3.1.0.jar'
+                    stash name: includes: './target/spring-petclinic-3.1.0.jar', 'SpringJar'
                 }
             }
         }
