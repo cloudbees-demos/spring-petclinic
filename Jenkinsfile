@@ -56,10 +56,10 @@ pipeline {
                     mvn clean package sonar:sonar \
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
-                      -Dsonar.login=$SONAR_TOKEN
-                      -Dsonar.language=java
-                      -Dsonar.sources=./src/main/java/org/springframework/
-                      # -Dsonar.java.binaries=./target/
+                      -Dsonar.login=$SONAR_TOKEN \
+                      -Dsonar.language=java \
+                      -Dsonar.sources=./src/main/java/org/springframework/ \
+                      -Dsonar.java.binaries=./target/
                     '''
                     stash name: 'SpringJar', includes: '/target/*.jar'
                 }
