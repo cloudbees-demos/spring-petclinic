@@ -20,7 +20,7 @@ pipeline {
                     - sleep
                     args:
                     - infinity
-                  - name: aws
+                  - name: awscli
                     image: amazon/aws-cli
                     command:
                     - sleep
@@ -55,9 +55,11 @@ pipeline {
                       -Dsonar.projectKey=cbc-petclinic-eks \
                       -Dsonar.host.url=https://sonarqube.cb-demos.io \
                       -Dsonar.login=$SONAR_TOKEN
-                      -Dsonar.sources=*/src/main/java/org/springframework
-                      -Dsonar.java.binaries=*/target/classes/org/springframework/
-                   '''
+                      -Dsonar.language=java
+                      -Dsonar.sources=*/src/main/java/org/springframework #/var/lib/jenkins/workspace/$JOB_NAME/target/classes
+                      -Dsonar.java.binaries=*/target/classes/org/springframework/ #/var/lib/jenkins/workspace/$JOB_NAME/target/classes
+                    '''
+                    stash name: 'SpringJar', includes: '/target/*.jar'
                 }
             }
         }
@@ -111,6 +113,20 @@ pipeline {
             }
         }
         // junit '**/target/surefire-reports/TEST-*.xml'
+        /*
+         *
+         * STAGE - Build Docker Image
+         *
+         * Build Docker Image
+         *
+        */
+        stage('buildDockerImage') {
+            steps {
+                container('docker') {
+                    sh 'aws sts get-caller-identity --query Account --output text'
+                }
+            }
+        }
 
         /*
          *
@@ -121,8 +137,17 @@ pipeline {
         */
         stage('deploy2ecr') {
             steps {
-                container('docker') {
-                    sh 'aws sts get-caller-identity --query Account --output text'
+                container('awscli') {
+                    /* groovylint-disable-next-line DuplicateStringLiteral */
+                    unstash 'SpringJar'
+                    sh '''
+                    export AWD_ID=$(aws sts get-caller-identity --query Account --output text)
+                    export REGISTRY="$AWD_ID.dkr.ecr.us-east-1.amazonaws.com"
+                    aws ecr get-login-password --region us-east-1 | docker login --username AWS \
+                        --password-stdin $AWS_ID.dkr.ecr.us-east-1.amazonaws.com/cbc-demo
+                    docker tag springboot-petclinic:latest $REGISTRY/springboot-petclinic:latest 
+                    docker push $REGISTRY/springboot-petclinic:latest
+                    '''
                 }
             }
         }
