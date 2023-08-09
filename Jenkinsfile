@@ -69,6 +69,22 @@ pipeline {
 
         /*
          *
+         * STAGE - Get AWS Variables
+         *
+         * Store Variables for use later
+         *
+        */
+        stage('Get AWS Variables') {
+            steps {
+                sh '''
+                  export AWD_ID = $(aws sts get-caller-identity --query Account --output text)
+                  export REGISTRY = "$AWD_ID.dkr.ecr.us-east-1.amazonaws.com"
+                  export AWD_PASS = aws ecr get-login-password --region us-east-1
+                  '''
+            }
+        }
+        /*
+         *
          * STAGE - build-test-deployArtifacts
          *
          * Deploy to Nexus repo: 'maven-releases'
@@ -121,37 +137,17 @@ pipeline {
          * STAGE - Build Docker Image
          *
          * Build Docker Image
-         *
-        */
-        stage('buildDockerImage') {
-            steps {
-                container('docker') {
-                    sh '''
-                    docker tag springboot-petclinic:latest $REGISTRY/springboot-petclinic:latest 
-                    docker push $REGISTRY/springboot-petclinic:latest
-                    '''
-                }
-            }
-        }
-
-        /*
-         *
-         * STAGE - Deploy Container Image to ECR
-         *
          * Deploy to ECR
          *
         */
-        stage('deploy2ecr') {
+        stage('buildPushDockerImage') {
             steps {
-                container('awscli') {
-                    /* groovylint-disable-next-line DuplicateStringLiteral */
+                container('docker') {
                     unstash 'SpringJar'
                     sh '''
-                    export AWD_ID=$(aws sts get-caller-identity --query Account --output text)
-                    export REGISTRY="$AWD_ID.dkr.ecr.us-east-1.amazonaws.com"
-                    aws ecr get-login-password --region us-east-1 | docker login --username AWS \
-                        --password-stdin $AWS_ID.dkr.ecr.us-east-1.amazonaws.com/cbc-demo
-                    docker tag springboot-petclinic:latest $REGISTRY/springboot-petclinic:latest 
+                    docker login --username AWS --password $AWS_PASS $AWS_ID.dkr.ecr.us-east-1.amazonaws.com/cbc-demo
+                    docker build -f ./.devcontainer/Dockerfile -t springboot-petclinic .
+                    docker tag springboot-petclinic:latest $REGISTRY/springboot-petclinic:latest
                     docker push $REGISTRY/springboot-petclinic:latest
                     '''
                 }
