@@ -34,8 +34,6 @@ pipeline {
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
         AWS_CRED = credentials('clusterAdmin')
-        AWD_ID = $(aws sts get-caller-identity --query Account --output text)
-        REGISTRY = "$AWD_ID.dkr.ecr.us-east-1.amazonaws.com"
     }
     tools {
         jdk 'Java-17'
