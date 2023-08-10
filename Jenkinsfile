@@ -104,7 +104,7 @@ pipeline {
                 container('maven') {
                     //sh 'find /usr/share/maven | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"'
                     sh '''
-                        ls /usr/share/maven/
+                        ls /usr/share/maven/conf/
                         cat >> /usr/share/maven/conf/settings.xml <<EOF
                         <!-- servers
                           | This is a list of authentication profiles, keyed by the server-id used within the system.
@@ -134,11 +134,9 @@ pipeline {
                         </servers>
                         EOF
 
-                        ##### ---------------   BUILD      >--------------- #####
-                        ##### --------------->    TEST     >--------------- #####
-                        ##### --------------->     DEPLOY  |--------------- #####
+                        cat /usr/share/maven/conf/settings.xml
                         ./mvnw deploy
-
+                        echo "DEPLOYED"
                         '''
                 }
             }
