@@ -99,7 +99,8 @@ pipeline {
                     sh '''
 
             mvn -version
-            cat >> ~/.m2/settings.xml << EOF
+            find /usr/share/maven | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"
+            cat >> ~/usr/share/maven/settings.xml << EOF
             <!-- servers
               | This is a list of authentication profiles, keyed by the server-id used within the system.
               | Authentication profiles can be used whenever maven must make a connection to a remote server.
