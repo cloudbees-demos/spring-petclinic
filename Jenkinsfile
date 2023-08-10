@@ -1,4 +1,4 @@
-/* groovylint-disable DuplicateStringLiteral */
+/* groovylint-disable DuplicateStringLiteral, LineLength */
 // Uses Declarative syntax to run commands inside a container.
 /* groovylint-disable-next-line CompileStatic */
 pipeline {
@@ -96,45 +96,44 @@ pipeline {
             /* groovylint-disable-next-line GStringExpressionWithinString */
             steps {
                 container('maven') {
+                    //sh 'find /usr/share/maven | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"'
                     sh '''
 
-            mvn -version
-            find /usr/share/maven | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"
-            cat >> ~/usr/share/maven/settings.xml << EOF
-            <!-- servers
-              | This is a list of authentication profiles, keyed by the server-id used within the system.
-              | Authentication profiles can be used whenever maven must make a connection to a remote server.
-              |-->
-            <servers>
-              <!-- server
-                | Specifies the authentication information to use when connecting to a particular server, identified by
-                | a unique name within the system (referred to by the 'id' attribute below).
-                |
-                | NOTE: You should either specify username/password OR privateKey/passphrase, since these pairings are
-                |       used together.
-                |
-                -->
-              <server>
-                <id>nexus</id>
-                <username>${env.NEXUS_USER}</username>
-                <password>${env.NEXUS_PASS}</password>
-              </server>
-                <!-- Another sample, using keys to authenticate.
-              <server>
-                  <id>siteServer</id>
-                  <privateKey>/path/to/private/key</privateKey>
-                  <passphrase>optional; leave empty if not used.</passphrase>
-              </server>
-                -->
-            </servers>
-            EOF
+                        cat >> ~/usr/share/maven/conf/settings.xml <<EOF
+                        <!-- servers
+                          | This is a list of authentication profiles, keyed by the server-id used within the system.
+                          | Authentication profiles can be used whenever maven must make a connection to a remote server.
+                          |-->
+                        <servers>
+                          <!-- server
+                            | Specifies the authentication information to use when connecting to a particular server, identified by
+                            | a unique name within the system (referred to by the 'id' attribute below).
+                            |
+                            | NOTE: You should either specify username/password OR privateKey/passphrase, since these pairings are
+                            |       used together.
+                            |
+                            -->
+                          <server>
+                            <id>nexus</id>
+                            <username>${NEXUS_USER}</username>
+                            <password>${NEXUS_PASS}</password>
+                          </server>
+                            <!-- Another sample, using keys to authenticate.
+                          <server>
+                              <id>siteServer</id>
+                              <privateKey>/path/to/private/key</privateKey>
+                              <passphrase>optional; leave empty if not used.</passphrase>
+                          </server>
+                            -->
+                        </servers>
+                        EOF
+                          
+                        ##### ---------------   BUILD      >--------------- #####
+                        ##### --------------->    TEST     >--------------- #####
+                        ##### --------------->     DEPLOY  |--------------- #####
+                        ./mvnw deploy
 
-            ##### ---------------   BUILD      >--------------- #####
-            ##### --------------->    TEST     >--------------- #####
-            ##### --------------->     DEPLOY  |--------------- #####
-            ./mvnw deploy
-
-            '''
+                        '''
                 }
             }
         }
