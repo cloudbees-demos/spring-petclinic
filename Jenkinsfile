@@ -27,6 +27,12 @@ pipeline {
                     - sleep
                     args:
                     - infinity
+                  - name: gravvlvm-maven
+                    image: softinstigate/graalvm-maven
+                    command:
+                    - sleep
+                    args:
+                    - infinity
                 '''
 
             defaultContainer 'maven'
@@ -98,8 +104,8 @@ pipeline {
                 container('maven') {
                     //sh 'find /usr/share/maven | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"'
                     sh '''
-
-                        cat >> ~/usr/share/maven/conf/settings.xml <<EOF
+                        ls /usr/share/maven/
+                        cat >> /usr/share/maven/conf/settings.xml <<EOF
                         <!-- servers
                           | This is a list of authentication profiles, keyed by the server-id used within the system.
                           | Authentication profiles can be used whenever maven must make a connection to a remote server.
@@ -127,7 +133,7 @@ pipeline {
                             -->
                         </servers>
                         EOF
-                          
+
                         ##### ---------------   BUILD      >--------------- #####
                         ##### --------------->    TEST     >--------------- #####
                         ##### --------------->     DEPLOY  |--------------- #####
