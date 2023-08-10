@@ -98,7 +98,7 @@ pipeline {
                 container('maven') {
                     sh '''
 
-            ls ./.m2/
+            mvn -version
             cat >> ~/.m2/settings.xml << EOF
             <!-- servers
               | This is a list of authentication profiles, keyed by the server-id used within the system.
