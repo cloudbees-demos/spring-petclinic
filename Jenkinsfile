@@ -103,8 +103,10 @@ pipeline {
             steps {
                 container('maven') {
                     //sh 'find /usr/share/maven | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"'
+                    unstash 'SpringJar'
                     sh '''
                         ls /usr/share/maven/conf/
+                        ls ./target/
                         cat >> /usr/share/maven/conf/settings.xml <<EOF
                         <!-- servers
                           | This is a list of authentication profiles, keyed by the server-id used within the system.
@@ -135,9 +137,11 @@ pipeline {
                         EOF
 
                         cat /usr/share/maven/conf/settings.xml
-                        ./mvnw deploy
+                        ./mvnw deploy -DskipTests
                         echo "DEPLOYED"
                         '''
+                        /* groovylint-disable-next-line DuplicateMapLiteral */
+                        stash includes: 'target/spring-petclinic-3.1.0.jar', name: 'SpringJar'
                 }
             }
         }
