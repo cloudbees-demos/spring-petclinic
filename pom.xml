@@ -435,7 +435,7 @@
               <configuration>
                 <lifecycleMappingMetadata>
                   <pluginExecutions>
-                    <pluginExecution>
+                    <!--pluginExecution>
                       <pluginExecutionFilter>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -447,7 +447,7 @@
                       <action>
                         <ignore />
                       </action>
-                    </pluginExecution>
+                    </pluginExecution-->
                     <pluginExecution>
                       <pluginExecutionFilter>
                         <groupId>org.springframework.boot</groupId>
