@@ -55,7 +55,7 @@ pipeline {
         */
         stage('Code Coverage Scan') {
             steps {
-                container('maven'){
+                container('maven') {
                     withSonarQubeEnv(installationName:'Sonarqube_Thunder') {
                         sh '''
                     mvn clean package sonar:sonar \
@@ -65,8 +65,6 @@ pipeline {
                       -Dsonar.language=java \
                       -Dsonar.sources=./src/main/java/org/springframework/ \
                       -Dsonar.java.binaries=./target/
-                    ls ./target/spring-petclinic-3.1.0.jar
-                    ls ./target
                     '''
                         stash includes: 'target/spring-petclinic-3.1.0.jar', name: 'SpringJar'
                     }
@@ -82,7 +80,7 @@ pipeline {
         */
         stage('Get AWS Variables') {
             steps {
-                container('awscli'){
+                container('awscli') {
                     sh '''
                       export AWS_ID=$(aws sts get-caller-identity --query Account --output text)
                       export REGISTRY="$AWS_ID.dkr.ecr.us-east-1.amazonaws.com"
@@ -104,6 +102,23 @@ pipeline {
                 container('maven') {
                     //sh 'find /usr/share/maven | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/"'
                     unstash 'SpringJar'
+                    createTag nexusInstanceId: 'nx3', tagAttributesJson: '{"createdBy" : "DredScott"}', tagName: 'build-125'
+                    nexusPublisher nexusInstanceId: 'nx3', nexusRepositoryId: 'maven-releases', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: '', filePath: 'target/spring-petclinic-3.1.0.jar']], mavenCoordinate: [artifactId: 'newStore', groupId: 'com.petclinic', packaging: 'jar', version: '3.1.0']]], tagName: 'build-457'
+                    /* nexusArtifactUploader {
+                        nexusVersion('nexus3')
+                        protocol('https')
+                        nexusUrl('nexus.preview.cb-demos.io')
+                        groupId('sp.sd')
+                        version('3.58')
+                        repository('petclinic')
+                        credentialsId('44620c50-1589-4617-a677-7563985e46e1')
+                        artifact {
+                            artifactId('spring-petclinic')
+                            type('jar')
+                            classifier('debug')
+                            file('target/spring-petclinic-3.1.0.jar')
+                        }
+                    } */
                     sh '''
                         ls /usr/share/maven/conf/
                         ls ./target/
